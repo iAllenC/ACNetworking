@@ -407,7 +407,7 @@
 }
 
 /**
- 获取本地缓存的response,不过期
+ 异步获取本地缓存的response,不过期
  
  @param url URL
  @param param 请求参数
@@ -418,7 +418,7 @@
 }
 
 /**
- 获取本地缓存的response
+ 异步获取本地缓存的response
 
  @param url URL
  @param param 请求参数
@@ -426,27 +426,54 @@
  @param completion 回调
  */
 - (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire completion:(ACNetCacheFetchCompletion)completion {
+    [self fetchResponseForUrl:url param:param expires:expire  async:YES completion:completion];
+}
+
+/**
+ 获取本地缓存的response
+ 
+ @param url URL
+ @param param 请求参数
+ @param expire 过期时间
+ @param completion 回调
+ @param async 是否异步
+ */
+- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion {
     if (!url || !completion) return;
     NSString *storeKey = [self.class fetchCacheKeyWithUrl:url params:param];
     __block id result = [self.memoryCache objectForKey:storeKey expires:expire];
     if (result) return completion(ACNetCacheTypeMemroy, result);
-    dispatch_async(self.ioQueue, ^{
-        NSString *filePath = [self filePathForStoreKey:storeKey];
-        if (!filePath) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                completion(ACNetCacheTypeNone, nil);
-            });
-        }
-        result = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
-        dispatch_async(dispatch_get_main_queue(), ^{
+    NSString *filePath = [self filePathForStoreKey:storeKey];
+    if (async) {
+        dispatch_async(self.ioQueue, ^{
+            if (!filePath) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(ACNetCacheTypeNone, nil);
+                });
+            }
             if ([self fileExpiredAtPath:filePath expires:expire]) {
-                completion(ACNetCacheTypeNone, nil);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(ACNetCacheTypeNone, nil);
+                });
             } else {
-                completion(ACNetCacheTypeDisk, result);
+                result = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(ACNetCacheTypeDisk, result);
+                });
             }
         });
-    });
+    } else {
+        __block ACNetCacheType type = ACNetCacheTypeNone;
+        dispatch_sync(self.ioQueue, ^{
+            if (filePath && ![self fileExpiredAtPath:filePath expires:expire]) {
+                result = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+                type = ACNetCacheTypeDisk;
+            }
+        });
+        completion(type, result);
+    }
 }
+
 
 /**
  根据key获取文件存储路径
@@ -472,15 +499,20 @@
 {
     NSArray *keys = [params allKeys];
     keys = [keys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        NSComparisonResult result = [obj1 compare:obj2];
-        return  result == NSOrderedDescending;
+        return  [obj1 compare:obj2] == NSOrderedDescending;
     }];
-    
     NSMutableArray *array = [NSMutableArray array];
     for (NSString *key in keys)
     {
-        NSString *value = params[key];
-        NSString *string = [NSString stringWithFormat:@"%@=%@",key,value];
+        id value = params[key];
+        NSString *stringValue = nil;
+        if ([value isKindOfClass:NSString.class]) {
+            stringValue = value;
+        } else if ([NSJSONSerialization isValidJSONObject:value]) {
+            stringValue = [self ac_jsonString:value];
+        }
+        if (!stringValue && [stringValue isKindOfClass:NSObject.class]) stringValue = ((NSObject *)value).description;
+        NSString *string = [NSString stringWithFormat:@"%@=%@",key,stringValue ?: value];
         [array addObject:string];
     }
     NSString *result = [array componentsJoinedByString:@"&"];
@@ -505,6 +537,14 @@
     return [ms copy];
 }
 
++ (NSString *)ac_jsonString:(id)obj
+{
+    if (![NSJSONSerialization isValidJSONObject:obj]) return nil;
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:obj options:0 error:&error];
+    NSString *json = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    return json;
+}
 
 /**
  检查文件是否过期

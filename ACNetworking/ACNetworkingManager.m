@@ -37,17 +37,22 @@
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)GET:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)get:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
     if ([self shouldFetchLocalResponseForUrl:URLString options:options params:parameters expire:expire]) {
         //直接读取本地缓存
         __weak typeof(self) weakSelf = self;
-        [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire completion:^(ACNetCacheType type, id response) {
+        [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire async:!(options & ACNetworkingFetchOptionLocalAndNet) completion:^(ACNetCacheType type, id response) {
             if (completion) completion(nil, type, response, nil);
             if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString params:parameters];
         }];
-        return nil;
+        if (options & ACNetworkingFetchOptionLocalAndNet) {
+            return [self getRequest:URLString expires:expire options:options parameters:parameters progress:downloadProgress completion:completion];
+        } else {
+            return nil;
+        }
+    } else {
+        return [self getRequest:URLString expires:expire options:options parameters:parameters progress:downloadProgress completion:completion];
     }
-    return [self getRequest:URLString expires:expire options:options parameters:parameters progress:downloadProgress completion:completion];
 }
 
 /**
@@ -81,17 +86,23 @@
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)POST:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)post:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
     if ([self shouldFetchLocalResponseForUrl:URLString options:options params:parameters expire:expire]) {
         //直接读取本地缓存
         __weak typeof(self) weakSelf = self;
-        [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire completion:^(ACNetCacheType type, id response) {
+        /** 如果没有传入ACNetworkingFetchOptionLocalAndNet则异步获取本地缓存,否则同步获取本地缓存,并且创建一个新的网络请求*/
+        [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire async:!(options & ACNetworkingFetchOptionLocalAndNet) completion:^(ACNetCacheType type, id response) {
             if (completion) completion(nil, type, response, nil);
             if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString params:parameters];
         }];
-        return nil;
+        if (options & ACNetworkingFetchOptionLocalAndNet) {
+            return [self postRequest:URLString expires:expire options:options parameters:parameters progress:uploadProgress completion:completion];
+        } else {
+            return nil;
+        }
+    } else {
+        return [self postRequest:URLString expires:expire options:options parameters:parameters progress:uploadProgress completion:completion];
     }
-    return [self postRequest:URLString expires:expire options:options parameters:parameters progress:uploadProgress completion:completion];
 }
 
 /**
@@ -153,7 +164,6 @@
             if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:url params:parameters];
         }];
     }
-
 }
 
 /**
@@ -168,9 +178,10 @@
 - (BOOL)shouldFetchLocalResponseForUrl:(NSString *)url options:(ACNetworkingFetchOption)options params:(NSDictionary *)params expire:(NSTimeInterval)expire {
     //option只读本地
     if (options & ACNetworkingFetchOptionLocalOnly) return YES;
-    //本地有缓存未过期且option不为只取网络
-    if (!(options & ACNetworkingFetchOptionNetOnly) && [self.responseCache netCacheExistsForUrl:url params:params expires:expire]) return YES;
-    return NO;
+    //option只取网络
+    if (options & ACNetworkingFetchOptionNetOnly) return NO;
+    //返回本地是否有未过期缓存
+    return [self.responseCache netCacheExistsForUrl:url params:params expires:expire];
 }
 
 #pragma mark - API
@@ -184,7 +195,7 @@
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString parameters:(NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self GET:URLString expires:0 options:ACNetworkingFetchOptionNetOnly parameters:parameters progress:nil completion:completion];
+    return [self get:URLString expires:0 options:ACNetworkingFetchOptionNetOnly parameters:parameters progress:nil completion:completion];
 }
 
 /**
@@ -200,6 +211,31 @@
 }
 
 /**
+ get数据(先读缓存,再取网络, 不过期)
+ 
+ @param URLString url
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+    return [self getLocalAndNet:URLString expires:MAXFLOAT parameters:parameters completion:completion];
+}
+
+/**
+ get数据(先读缓存,再取网络)
+ 
+ @param URLString url
+ @param expire 过期时间
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+    return [self get:URLString expires:expire options:ACNetworkingFetchOptionLocalAndNet parameters:parameters progress:nil completion:completion];
+}
+
+/**
  get数据(优先读缓存)
  
  @param URLString url
@@ -209,7 +245,7 @@
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self GET:URLString expires:expire options:ACNetworkingFetchOptionDefault parameters:parameters progress:nil completion:completion];
+    return [self get:URLString expires:expire options:ACNetworkingFetchOptionDefault parameters:parameters progress:nil completion:completion];
 }
 
 /**
@@ -221,7 +257,7 @@
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)getLocal:(NSString *)URLString parameters:(NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self GET:URLString expires:MAXFLOAT options:ACNetworkingFetchOptionLocalOnly parameters:parameters progress:nil completion:completion];
+    return [self get:URLString expires:MAXFLOAT options:ACNetworkingFetchOptionLocalOnly parameters:parameters progress:nil completion:completion];
 }
 
 /**
@@ -233,7 +269,7 @@
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString parameters:(NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self POST:URLString expires:0 options:ACNetworkingFetchOptionNetOnly parameters:parameters progress:nil completion:completion];
+    return [self post:URLString expires:0 options:ACNetworkingFetchOptionNetOnly parameters:parameters progress:nil completion:completion];
 }
 
 /**
@@ -258,9 +294,33 @@
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)postData:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self POST:URLString expires:expire options:ACNetworkingFetchOptionDefault parameters:parameters progress:nil completion:completion];
+    return [self post:URLString expires:expire options:ACNetworkingFetchOptionDefault parameters:parameters progress:nil completion:completion];
 }
 
+/**
+ post数据(先读缓存,再取网络, 不过期)
+ 
+ @param URLString url
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)postLocalAndNet:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+    return [self postLocalAndNet:URLString expires:MAXFLOAT parameters:parameters completion:completion];
+}
+
+/**
+ post数据(先读缓存,再取网络)
+ 
+ @param URLString url
+ @param expire 过期时间
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)postLocalAndNet:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+    return [self post:URLString expires:expire options:ACNetworkingFetchOptionLocalAndNet parameters:parameters progress:nil completion:completion];
+}
 
 /**
  读取本地post数据
@@ -271,7 +331,7 @@
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)postLocal:(NSString *)URLString parameters:(NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self POST:URLString expires:MAXFLOAT options:ACNetworkingFetchOptionLocalOnly parameters:parameters progress:nil completion:completion];
+    return [self post:URLString expires:MAXFLOAT options:ACNetworkingFetchOptionLocalOnly parameters:parameters progress:nil completion:completion];
 }
 
 @end

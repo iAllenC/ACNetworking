@@ -10,15 +10,16 @@
 #import "ACNetworkingManager.h"
 
 @interface ViewController ()
-@property (nonatomic, strong) ACNetworkingManager *networkinManager;
+@property (nonatomic, strong) ACNetworkingManager *networkingManager;
+@property (nonatomic, strong) NSURLSessionDataTask *task;
 @end
 
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.networkinManager = [ACNetworkingManager manager];
-//    [self.networkinManager postRequest:@"https://free-api.heweather.com/v5/weather" parameters:@{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118"} completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
+    self.networkingManager = [ACNetworkingManager manager];
+//    self.task = [self.networkingManager postRequest:@"https://free-api.heweather.com/v5/weather" parameters:@{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118"} completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
 //        NSLog(@"%@",responseObject);
 //    }];
 //    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -26,9 +27,16 @@
 //            NSLog(@"%@",responseObject);
 //        }];
 //    });
-    [self.networkinManager getLocal:@"https://free-api.heweather.com/v5/weather" parameters:@{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118"} completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
+//    self.task = [self.networkinManager getLocal:@"https://free-api.heweather.com/v5/weather" parameters:@{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118", @"test": @{@"1":@"1",@"2":@"2",@"3":@"3"}} completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
+//        NSLog(@"%@",responseObject);
+//    }];
+//    self.task = [self.networkingManager postLocalAndNet:@"https://free-api.heweather.com/v5/weather"  parameters:@{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118.5"} completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
+//        NSLog(@"%@",responseObject);
+//    }];
+    self.task = [self.networkingManager post:@"https://free-api.heweather.com/v5/weather" expires:MAXFLOAT options:ACNetworkingFetchOptionNetOnly | ACNetworkingFetchOptionDeleteCache parameters:@{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118.5"} progress:nil completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
         NSLog(@"%@",responseObject);
     }];
+    NSLog(@"Task:%@", self.task);
 }
 
 @end

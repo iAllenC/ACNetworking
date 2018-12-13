@@ -138,7 +138,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param completion:(ACNetCacheFetchCompletion)completion;
 
 /**
- 获取本地缓存的response
+ 异步获取本地缓存的response
  
  @param url URL
  @param param 请求参数
@@ -146,6 +146,17 @@ NS_ASSUME_NONNULL_BEGIN
  @param completion 回调
  */
 - (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire completion:(ACNetCacheFetchCompletion)completion;
+
+/**
+ 获取本地缓存的response
+ 
+ @param url URL
+ @param param 请求参数
+ @param expire 过期时间
+ @param completion 回调
+ @param async 是否异步
+ */
+- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion;
 
 @end
 
