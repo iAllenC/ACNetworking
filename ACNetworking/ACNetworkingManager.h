@@ -12,6 +12,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** 网络请求策略 */
 typedef NS_ENUM(NSUInteger, ACNetworkingFetchOption) {
     /** 默认option */
     ACNetworkingFetchOptionDefault = 1 << 0,

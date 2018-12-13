@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AF32F8A6020CA282B26D3E9E /* libPods-ACNetworkingDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6DBFABF68CACD496CA19E3F6 /* libPods-ACNetworkingDemo.a */; };
+		F7198F5C21C264390020B69E /* ACNetCacheKeyGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = F7198F5B21C264390020B69E /* ACNetCacheKeyGenerator.m */; };
 		F79C76AB21B9217600C7466F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F79C76AA21B9217600C7466F /* AppDelegate.m */; };
 		F79C76AE21B9217600C7466F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F79C76AD21B9217600C7466F /* ViewController.m */; };
 		F79C76B121B9217600C7466F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F79C76AF21B9217600C7466F /* Main.storyboard */; };
@@ -23,6 +24,8 @@
 		6DBFABF68CACD496CA19E3F6 /* libPods-ACNetworkingDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ACNetworkingDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1DD030726AE271C143964E7 /* Pods-ACNetworkingDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ACNetworkingDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-ACNetworkingDemo/Pods-ACNetworkingDemo.release.xcconfig"; sourceTree = "<group>"; };
 		EFF77005D29F25E3340B79A2 /* Pods-ACNetworkingDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ACNetworkingDemo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ACNetworkingDemo/Pods-ACNetworkingDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		F7198F5A21C261C80020B69E /* ACNetCacheKeyGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACNetCacheKeyGenerator.h; sourceTree = "<group>"; };
+		F7198F5B21C264390020B69E /* ACNetCacheKeyGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ACNetCacheKeyGenerator.m; sourceTree = "<group>"; };
 		F79C76A621B9217600C7466F /* ACNetworkingDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ACNetworkingDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F79C76A921B9217600C7466F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F79C76AA21B9217600C7466F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -108,10 +111,12 @@
 		F79C76BF21B9220500C7466F /* ACNetworking */ = {
 			isa = PBXGroup;
 			children = (
-				F79C76C021B9223800C7466F /* ACNetworkingManager.h */,
-				F79C76C121B9223800C7466F /* ACNetworkingManager.m */,
 				F79C76C321B9227800C7466F /* ACNetCache.h */,
 				F79C76C421B9227800C7466F /* ACNetCache.m */,
+				F7198F5A21C261C80020B69E /* ACNetCacheKeyGenerator.h */,
+				F7198F5B21C264390020B69E /* ACNetCacheKeyGenerator.m */,
+				F79C76C021B9223800C7466F /* ACNetworkingManager.h */,
+				F79C76C121B9223800C7466F /* ACNetworkingManager.m */,
 			);
 			path = ACNetworking;
 			sourceTree = "<group>";
@@ -216,6 +221,7 @@
 				F79C76AE21B9217600C7466F /* ViewController.m in Sources */,
 				F79C76B921B9217600C7466F /* main.m in Sources */,
 				F79C76AB21B9217600C7466F /* AppDelegate.m in Sources */,
+				F7198F5C21C264390020B69E /* ACNetCacheKeyGenerator.m in Sources */,
 				F79C76C221B9223800C7466F /* ACNetworkingManager.m in Sources */,
 				F7E51D2621BA56E300894E76 /* Foundation+Log.m in Sources */,
 			);

@@ -7,7 +7,6 @@
 //
 
 #import "ACNetCache.h"
-#import <CommonCrypto/CommonDigest.h>
 
 @interface ACMemoryCache <KeyType, ObjectType> : NSCache <KeyType, ObjectType>
 
@@ -182,15 +181,15 @@
     static ACNetCache *_sharedCache;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _sharedCache = [ACNetCache cacheWithNamespace:@"defaultCache" directiory:nil];
+        _sharedCache = [ACNetCache cacheWithNamespace:@"defaultCache"];
     });
     return _sharedCache;
 }
 
-- (instancetype)initWithNamespace:(nonnull NSString *)namespace directiory:(NSString *)directory {
+- (instancetype)initWithNamespace:(nonnull NSString *)ns directiory:(NSString *)directory keyGenerator:(ACNetCacheKeyGenerator)keyGenerator {
     if (self = [super init]) {
         _ioQueue = dispatch_queue_create("com.acnetworking.netcache", DISPATCH_QUEUE_SERIAL);
-        NSString *fullNamespace = [@"com.acnetworking.netcache" stringByAppendingString:namespace];
+        NSString *fullNamespace = [@"com.acnetworking.netcache" stringByAppendingString:ns];
         if (directory) {
             _diskDirectory = [directory stringByAppendingPathComponent:fullNamespace];
         } else {
@@ -198,6 +197,7 @@
         }
         _memoryCache = [[ACMemoryCache alloc] init];
         _memoryCache.name = fullNamespace;
+        if (keyGenerator) _keyGenerator = keyGenerator;
         dispatch_sync(_ioQueue, ^{
             self.fileManager = [NSFileManager new];
         });
@@ -205,8 +205,16 @@
     return self;
 }
 
-+ (instancetype)cacheWithNamespace:(NSString *)namespace directiory:(NSString *)directory {
-    return [[self alloc] initWithNamespace:namespace directiory:directory];
++ (instancetype)cacheWithNamespace:(NSString *)ns {
+    return [self cacheWithNamespace:ns directiory:nil];
+}
+
++ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(NSString *)directory {
+    return [self cacheWithNamespace:ns directiory:directory keyGenerator:nil];
+}
+
++ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(NSString *)directory keyGenerator:(ACNetCacheKeyGenerator)keyGenerator {
+    return [[self alloc] initWithNamespace:ns directiory:directory keyGenerator:keyGenerator];
 }
 
 - (nullable NSString *)makeDiskCachePath:(nonnull NSString*)fullNamespace {
@@ -218,46 +226,46 @@
  检查内存或磁盘缓存中是否有缓存的response
  
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url params:(NSDictionary *)params {
-    return [self netCacheExistsForUrl:url params:params expires:MAXFLOAT];
+- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
+    return [self netCacheExistsForUrl:url param:param expires:MAXFLOAT];
 }
 
 /**
  检查内存或磁盘缓存中是否有缓存的response
  
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url params:(NSDictionary *)params expires:(NSTimeInterval)expire {
-    return [self memoryCacheExistsForUrl:url params:params expires:expire] || [self diskCacheExistsForUrl:url params:params expires:expire];
+- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire {
+    return [self memoryCacheExistsForUrl:url param:param expires:expire] || [self diskCacheExistsForUrl:url param:param expires:expire];
 }
 
 /**
  检查内存缓存中是否存在对应的response缓存
 
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @return 是否有缓存
  */
-- (BOOL)memoryCacheExistsForUrl:(NSString *)url params:(NSDictionary *)params {
-    return [self memoryCacheExistsForKey:[self.class fetchCacheKeyWithUrl:url params:params]];
+- (BOOL)memoryCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
+    return [self memoryCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param]];
 }
 
 /**
  检查内存缓存中是否存在对应的response缓存
  
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)memoryCacheExistsForUrl:(NSString *)url params:(NSDictionary *)params expires:(NSTimeInterval)expire {
-    return [self memoryCacheExistsForKey:[self.class fetchCacheKeyWithUrl:url params:params] expires:expire];
+- (BOOL)memoryCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire {
+    return [self memoryCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:expire];
 }
 
 /**
@@ -286,23 +294,23 @@
  检查磁盘缓存中是否存在对应的response缓存
  
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @return 是否有缓存
  */
-- (BOOL)diskCacheExistsForUrl:(NSString *)url params:(NSDictionary *)params {
-    return [self diskCacheExistsForKey:[self.class fetchCacheKeyWithUrl:url params:params] expires:MAXFLOAT];
+- (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
+    return [self diskCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:MAXFLOAT];
 }
 
 /**
  检查磁盘缓存中是否存在对应的response缓存
  
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)diskCacheExistsForUrl:(NSString *)url params:(NSDictionary *)params expires:(NSTimeInterval)expire {
-    return [self diskCacheExistsForKey:[self.class fetchCacheKeyWithUrl:url params:params] expires:expire];
+- (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire {
+    return [self diskCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:expire];
 
 }
 
@@ -342,10 +350,10 @@
  
  @param response 要缓存的结果
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  */
-- (void)storeResponse:(id)response forUrl:(nonnull NSString *)url params:(NSDictionary *)params {
-    [self storeResponse:response forUrl:url params:params toMemory:YES toDisk:YES];
+- (void)storeResponse:(id)response forUrl:(nonnull NSString *)url param:(NSDictionary *)param {
+    [self storeResponse:response forUrl:url param:param toMemory:YES toDisk:YES];
 }
 
 /**
@@ -353,13 +361,13 @@
 
  @param response 要缓存的结果
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @param toMemory 是否缓存到内存
  @param toDisk 是否缓存到磁盘
  */
-- (void)storeResponse:(id)response forUrl:(NSString *)url params:(NSDictionary *)params toMemory:(BOOL)toMemory toDisk:(BOOL)toDisk {
+- (void)storeResponse:(id)response forUrl:(NSString *)url param:(NSDictionary *)param toMemory:(BOOL)toMemory toDisk:(BOOL)toDisk {
     if (!toMemory && !toDisk) return;
-    NSString *storeKey = [self.class fetchCacheKeyWithUrl:url params:params];
+    NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
     if (toMemory) [self.memoryCache setObject:response forKey:storeKey];
     if (toDisk) [self storeResponseToDisk:response forKey:storeKey];
 }
@@ -381,22 +389,22 @@
  删除本地内存缓存和磁盘缓存的response
 
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  */
-- (void)deleteResponseForUrl:(NSString *)url params:(NSDictionary *)params {
-    [self deleteResponseForUrl:url params:params fromMemory:YES fromDisk:YES];
+- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param {
+    [self deleteResponseForUrl:url param:param fromMemory:YES fromDisk:YES];
 }
 
 /**
  删除本地response缓存
 
  @param url URL
- @param params 请求参数
+ @param param 请求参数
  @param fromMemory 是否删除内存缓存
  @param fromDisk 是否删除磁盘缓存
  */
-- (void)deleteResponseForUrl:(NSString *)url params:(NSDictionary *)params fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk {
-    NSString *storeKey = [self.class fetchCacheKeyWithUrl:url params:params];
+- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk {
+    NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
     if (fromMemory && [self memoryCacheExistsForKey:storeKey]) [self.memoryCache removeObjectForKey:storeKey];
     if (fromDisk && [self diskCacheExistsForKey:storeKey expires:MAXFLOAT]) {
         dispatch_async(self.ioQueue, ^{
@@ -440,7 +448,7 @@
  */
 - (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion {
     if (!url || !completion) return;
-    NSString *storeKey = [self.class fetchCacheKeyWithUrl:url params:param];
+    NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
     __block id result = [self.memoryCache objectForKey:storeKey expires:expire];
     if (result) return completion(ACNetCacheTypeMemroy, result);
     NSString *filePath = [self filePathForStoreKey:storeKey];
@@ -489,61 +497,14 @@
 }
 
 /**
- 根据url和paramsc生成存储Key
-
+ 根据url和paramc生成存储Key
+ 
  @param url url
- @param params params
+ @param param param
  @return key
  */
-+ (NSString *)fetchCacheKeyWithUrl:(NSString *)url params:(NSDictionary *)params
-{
-    NSArray *keys = [params allKeys];
-    keys = [keys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return  [obj1 compare:obj2] == NSOrderedDescending;
-    }];
-    NSMutableArray *array = [NSMutableArray array];
-    for (NSString *key in keys)
-    {
-        id value = params[key];
-        NSString *stringValue = nil;
-        if ([value isKindOfClass:NSString.class]) {
-            stringValue = value;
-        } else if ([NSJSONSerialization isValidJSONObject:value]) {
-            stringValue = [self ac_jsonString:value];
-        }
-        if (!stringValue && [stringValue isKindOfClass:NSObject.class]) stringValue = ((NSObject *)value).description;
-        NSString *string = [NSString stringWithFormat:@"%@=%@",key,stringValue ?: value];
-        [array addObject:string];
-    }
-    NSString *result = [array componentsJoinedByString:@"&"];
-    return [self ac_md5String:[url stringByAppendingString:result]];
-}
-
-/**
- MD5加密
-
- @param string 加密前
- @return 加密后
- */
-+ (NSString *)ac_md5String:(NSString *)string {
-    if(!string || string.length == 0) return nil;
-    unsigned char digest[CC_MD5_DIGEST_LENGTH], i;
-    CC_MD5([string UTF8String], (int)[string lengthOfBytesUsingEncoding:NSUTF8StringEncoding], digest);
-    NSMutableString *ms = [NSMutableString string];
-    for(i=0;i<CC_MD5_DIGEST_LENGTH;i++)
-    {
-        [ms appendFormat: @"%02x", (int)(digest[i])];
-    }
-    return [ms copy];
-}
-
-+ (NSString *)ac_jsonString:(id)obj
-{
-    if (![NSJSONSerialization isValidJSONObject:obj]) return nil;
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:obj options:0 error:&error];
-    NSString *json = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    return json;
+- (NSString *)fetchCacheKeyWithUrl:(NSString *)url param:(NSDictionary *)param {
+    return self.keyGenerator(url, param) ?: [self.class fetchCacheKeyWithUrl:url param:param];
 }
 
 /**
@@ -591,4 +552,13 @@
     return result;
 }
 
+- (ACNetCacheKeyGenerator)keyGenerator {
+    if (!_keyGenerator) {
+        _keyGenerator = DefaultKeyGenerator;
+    }
+    return _keyGenerator;
+}
+
 @end
+
+

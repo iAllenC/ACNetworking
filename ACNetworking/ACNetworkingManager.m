@@ -38,12 +38,12 @@
  @return 生成的task
  */
 - (NSURLSessionDataTask *)get:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
-    if ([self shouldFetchLocalResponseForUrl:URLString options:options params:parameters expire:expire]) {
+    if ([self shouldFetchLocalResponseForUrl:URLString options:options param:parameters expire:expire]) {
         //直接读取本地缓存
         __weak typeof(self) weakSelf = self;
         [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire async:!(options & ACNetworkingFetchOptionLocalAndNet) completion:^(ACNetCacheType type, id response) {
             if (completion) completion(nil, type, response, nil);
-            if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString params:parameters];
+            if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString param:parameters];
         }];
         if (options & ACNetworkingFetchOptionLocalAndNet) {
             return [self getRequest:URLString expires:expire options:options parameters:parameters progress:downloadProgress completion:completion];
@@ -87,13 +87,13 @@
  @return 生成的task
  */
 - (NSURLSessionDataTask *)post:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
-    if ([self shouldFetchLocalResponseForUrl:URLString options:options params:parameters expire:expire]) {
+    if ([self shouldFetchLocalResponseForUrl:URLString options:options param:parameters expire:expire]) {
         //直接读取本地缓存
         __weak typeof(self) weakSelf = self;
         /** 如果没有传入ACNetworkingFetchOptionLocalAndNet则异步获取本地缓存,否则同步获取本地缓存,并且创建一个新的网络请求*/
         [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire async:!(options & ACNetworkingFetchOptionLocalAndNet) completion:^(ACNetCacheType type, id response) {
             if (completion) completion(nil, type, response, nil);
-            if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString params:parameters];
+            if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString param:parameters];
         }];
         if (options & ACNetworkingFetchOptionLocalAndNet) {
             return [self postRequest:URLString expires:expire options:options parameters:parameters progress:uploadProgress completion:completion];
@@ -138,8 +138,8 @@
  */
 - (void)handleHttpSucceessForUrl:(NSString *)url parames:(NSDictionary *)parameters task:(NSURLSessionDataTask *)task responseObject:(id)response expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options  completion:(ACNetworkingCompletion)completion {
     if (completion) completion(task, ACNetCacheTypeNet, response, nil);
-    if(options & ACNetworkingFetchOptionDeleteCache) return [self.responseCache deleteResponseForUrl:url params:parameters];
-    if (!(options & ACNetworkingFetchOptionNotUpdateCache)) [self.responseCache storeResponse:response forUrl:url params:parameters];
+    if(options & ACNetworkingFetchOptionDeleteCache) return [self.responseCache deleteResponseForUrl:url param:parameters];
+    if (!(options & ACNetworkingFetchOptionNotUpdateCache)) [self.responseCache storeResponse:response forUrl:url param:parameters];
 }
 
 /**
@@ -156,12 +156,12 @@
 - (void)handleHttpFailureForUrl:(NSString *)url parames:(NSDictionary *)parameters task:(NSURLSessionDataTask *)task error:(NSError *)error expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options  completion:(ACNetworkingCompletion)completion {
     if (options & ACNetworkingFetchOptionNetOnly) {
         if(completion) completion(task, ACNetCacheTypeNone, nil, error);
-        if(options & ACNetworkingFetchOptionDeleteCache) [self.responseCache deleteResponseForUrl:url params:parameters];
+        if(options & ACNetworkingFetchOptionDeleteCache) [self.responseCache deleteResponseForUrl:url param:parameters];
     } else {
         __weak typeof(self) weakSelf = self;
         [self.responseCache fetchResponseForUrl:url param:parameters expires:expire completion:^(ACNetCacheType type, id response) {
             if(completion) completion(nil, type, response, type == ACNetCacheTypeNone ? error : nil);
-            if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:url params:parameters];
+            if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:url param:parameters];
         }];
     }
 }
@@ -171,17 +171,17 @@
 
  @param url url
  @param options option
- @param params 请求参数
+ @param param 请求参数
  @param expire 过期时间
  @return 是否需要读取缓存
  */
-- (BOOL)shouldFetchLocalResponseForUrl:(NSString *)url options:(ACNetworkingFetchOption)options params:(NSDictionary *)params expire:(NSTimeInterval)expire {
+- (BOOL)shouldFetchLocalResponseForUrl:(NSString *)url options:(ACNetworkingFetchOption)options param:(NSDictionary *)param expire:(NSTimeInterval)expire {
     //option只读本地
     if (options & ACNetworkingFetchOptionLocalOnly) return YES;
     //option只取网络
     if (options & ACNetworkingFetchOptionNetOnly) return NO;
     //返回本地是否有未过期缓存
-    return [self.responseCache netCacheExistsForUrl:url params:params expires:expire];
+    return [self.responseCache netCacheExistsForUrl:url param:param expires:expire];
 }
 
 #pragma mark - API
