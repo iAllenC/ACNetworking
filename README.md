@@ -2,7 +2,7 @@
 
 ## 简介
 
-本框架是基于AFNetworking的网络缓存库，可将请求返回结果缓存的内存及磁盘，且支持自定义生成缓存Key。
+本框架是基于AFNetworking的网络缓存库，可将网络请求的返回结果缓存到内存及磁盘，且支持自定义生成缓存Key。
 
 ## 核心类
 
@@ -13,9 +13,15 @@
 * ACNetCacheKeyGenerator 一个Block定义，负责生成结果缓存的Key。
 
 ## 引入
+
+### Pod
 ```
 pod 'ACNetworking', '~> 1.0.1'
 ```
+
+### 手动
+下载工程文件，将ACNetworking文件夹copy到项目中即可
+
 ## 使用
 
 ### 1.创建ACNetworkingManager:
