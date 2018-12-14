@@ -14,6 +14,10 @@
     return [self managerWithSessionManager:[AFHTTPSessionManager manager] responseCache:ACNetCache.sharedCache];
 }
 
++ (instancetype)managerWithSessionManager:(AFHTTPSessionManager *)sessionManager {
+    return [self managerWithSessionManager:sessionManager responseCache:ACNetCache.sharedCache];
+}
+
 + (instancetype)managerWithSessionManager:(AFHTTPSessionManager *)sessionManager responseCache:(ACNetCache *)responseCache {
     return [[self alloc] initWithSessionManager:sessionManager responseCache:responseCache];
 }

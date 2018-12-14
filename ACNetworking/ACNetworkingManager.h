@@ -40,6 +40,15 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
 
 /**
  实例化
+ 
+ @param sessionManager sessionManager
+ @return 实例对象
+ */
++ (instancetype)managerWithSessionManager:(AFHTTPSessionManager *)sessionManager;
+
+
+/**
+ 实例化
 
  @param sessionManager sessionManager
  @param responseCache 缓存对象

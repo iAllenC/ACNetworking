@@ -8,7 +8,6 @@
 
 #ifndef ACNetCacheKeyGenerator_h
 #define ACNetCacheKeyGenerator_h
-#import <CommonCrypto/CommonDigest.h>
 
 /**
  结果缓存Key产生器
