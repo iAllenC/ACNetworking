@@ -79,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire;
+- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire;
 
 /**
  检查内存缓存中是否存在对应的response缓存
@@ -98,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)memoryCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire;
+- (BOOL)memoryCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire;
 
 /**
  检查磁盘缓存中是否存在对应的response缓存
@@ -117,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire;
+- (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire;
 
 /**
  缓存response
@@ -174,7 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expire 过期时间
  @param completion 回调
  */
-- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire completion:(ACNetCacheFetchCompletion)completion;
+- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire completion:(ACNetCacheFetchCompletion)completion;
 
 /**
  获取本地缓存的response
@@ -185,7 +185,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param completion 回调
  @param async 是否异步
  */
-- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion;
+- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion;
 
 @end
 

@@ -40,6 +40,8 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
 
 @property (nonatomic, strong, readonly) ACNetCache *responseCache;
 
+#pragma mark - Constructor
+
 + (instancetype)manager;
 
 /**
@@ -69,6 +71,8 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  */
 - (instancetype)initWithSessionManager:(AFHTTPSessionManager *)sessionManager responseCache:(ACNetCache *)responseCache;
 
+#pragma mark - Main
+
 /**
  get方法
 
@@ -81,7 +85,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @return dataTask
  */
 - (nullable NSURLSessionDataTask *)get:(NSString *)URLString
-                               expires:(NSTimeInterval)expire
+                               expires:(Expire_Time)expire
                                options:(ACNetworkingFetchOption)options
                             parameters:(nullable NSDictionary *)parameters
                               progress:(nullable void (^)(NSProgress *downloadProgress))downloadProgress
@@ -99,11 +103,13 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @return dataTask
  */
 - (nullable NSURLSessionDataTask *)post:(NSString *)URLString
-                                expires:(NSTimeInterval)expire
+                                expires:(Expire_Time)expire
                                 options:(ACNetworkingFetchOption)options
                              parameters:(nullable NSDictionary *)parameters
                                progress:(nullable void (^)(NSProgress *uploadProgress))uploadProgress
                              completion:(ACNetworkingCompletion)completion;
+
+#pragma mark - PUBLIC GET
 
 /**
  get请求(不读缓存)
@@ -134,7 +140,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+- (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
 /**
  get数据(优先读缓存,不过期)
@@ -155,7 +161,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+- (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
 /**
  get数据(先读缓存,再取网络, 不过期)
@@ -176,7 +182,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+- (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
 /**
  读取本地get数据
@@ -187,6 +193,8 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)getLocal:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+
+#pragma mark - PUBLIC POST
 
 /**
  post请求(不读缓存)
@@ -217,7 +225,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+- (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 /**
  post数据(优先读缓存,不过期)
 
@@ -237,7 +245,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)postData:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+- (nullable NSURLSessionDataTask *)postData:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
 /**
  post数据(先读缓存,再取网络, 不过期)
@@ -258,7 +266,7 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)postLocalAndNet:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+- (nullable NSURLSessionDataTask *)postLocalAndNet:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
 /**
  读取本地post数据

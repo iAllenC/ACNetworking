@@ -15,6 +15,8 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
 
 @implementation ACNetworkingManager
 
+#pragma mark - Constructor
+
 + (instancetype)manager {
     return [self managerWithSessionManager:[AFHTTPSessionManager manager] responseCache:ACNetCache.sharedCache];
 }
@@ -39,6 +41,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
     return [self initWithSessionManager:[AFHTTPSessionManager manager] responseCache:ACNetCache.sharedCache];
 }
 
+#pragma mark - GET
 /**
  获取Get数据
  
@@ -50,7 +53,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)get:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)get:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
     return [self fetch:URLString method:ACNetworkingMethodGet expires:expire options:options param:parameters progress:downloadProgress completion:completion];
 }
 
@@ -65,7 +68,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
     __weak typeof(self) weakSelf = self;
     return [self.sessionManager GET:URLString parameters:parameters progress:downloadProgress success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         [weakSelf handleHttpSucceessForUrl:URLString parames:parameters task:task responseObject:responseObject expires:expire options:options completion:completion];
@@ -74,6 +77,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
     }];
 }
 
+#pragma mark - POST
 /**
  获取POST数据
  
@@ -85,7 +89,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)post:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)post:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
     return [self fetch:URLString method:ACNetworkingMethodPost expires:expire options:options param:parameters progress:uploadProgress completion:completion];
 }
 
@@ -100,7 +104,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
     __weak typeof(self) weakSelf = self;
     return [self.sessionManager POST:URLString parameters:parameters progress:uploadProgress success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         [weakSelf handleHttpSucceessForUrl:URLString parames:parameters task:task responseObject:responseObject expires:expire options:options completion:completion];
@@ -109,6 +113,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
     }];
 }
 
+#pragma mark - Main
 /**
  根据传入的method和options发起(post/get)请求,或获取本地数据
 
@@ -121,8 +126,8 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return dataTask(未发起请求则返回nil)
  */
-- (NSURLSessionDataTask *)fetch:(NSString *)URLString method:(ACNetworkingMethod)method expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options param:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))progress completion:(ACNetworkingCompletion)completion {
-    if ([self shouldFetchLocalResponseForUrl:URLString options:options param:parameters expire:expire]) {
+- (NSURLSessionDataTask *)fetch:(NSString *)URLString method:(ACNetworkingMethod)method expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options param:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))progress completion:(ACNetworkingCompletion)completion {
+    if ([self shouldFetchLocalResponseForUrl:URLString options:options param:parameters expires:expire]) {
         __weak typeof(self) weakSelf = self;
         /**
          1.传入了LocalOnly或者LocalFirst则异步获取本地缓存
@@ -160,7 +165,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param options option
  @param completion 回调
  */
-- (void)handleHttpSucceessForUrl:(NSString *)url parames:(NSDictionary *)parameters task:(NSURLSessionDataTask *)task responseObject:(id)response expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options  completion:(ACNetworkingCompletion)completion {
+- (void)handleHttpSucceessForUrl:(NSString *)url parames:(NSDictionary *)parameters task:(NSURLSessionDataTask *)task responseObject:(id)response expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options  completion:(ACNetworkingCompletion)completion {
     if (completion) completion(task, ACNetCacheTypeNet, response, nil);
     if(options & ACNetworkingFetchOptionDeleteCache) return [self.responseCache deleteResponseForUrl:url param:parameters];
     if (!(options & ACNetworkingFetchOptionNotUpdateCache)) [self.responseCache storeResponse:response forUrl:url param:parameters];
@@ -177,7 +182,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param options option
  @param completion 回调
  */
-- (void)handleHttpFailureForUrl:(NSString *)url parames:(NSDictionary *)parameters task:(NSURLSessionDataTask *)task error:(NSError *)error expires:(NSTimeInterval)expire options:(ACNetworkingFetchOption)options  completion:(ACNetworkingCompletion)completion {
+- (void)handleHttpFailureForUrl:(NSString *)url parames:(NSDictionary *)parameters task:(NSURLSessionDataTask *)task error:(NSError *)error expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options  completion:(ACNetworkingCompletion)completion {
     if (options & ACNetworkingFetchOptionNetOnly || options & ACNetworkingFetchOptionLocalFirst || options & ACNetworkingFetchOptionLocalAndNet) {
         //只读网络、优先读本地、先读本地再取网络,直接回调(优先读本地或先读本地走到失败意味着本地没有缓存)
         if(completion) completion(task, ACNetCacheTypeNone, nil, error);
@@ -201,7 +206,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param expire 过期时间
  @return 是否需要读取缓存
  */
-- (BOOL)shouldFetchLocalResponseForUrl:(NSString *)url options:(ACNetworkingFetchOption)options param:(NSDictionary *)param expire:(NSTimeInterval)expire {
+- (BOOL)shouldFetchLocalResponseForUrl:(NSString *)url options:(ACNetworkingFetchOption)options param:(NSDictionary *)param expires:(Expire_Time)expire {
     //option只读网络,返回NO
     if (options & ACNetworkingFetchOptionNetOnly) return NO;
     //option只读本地,返回YES
@@ -212,7 +217,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
     return NO;
 }
 
-#pragma mark - API
+#pragma mark - PUBLIC GET
 
 /**
  get请求
@@ -247,7 +252,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+- (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self get:URLString expires:expire options:ACNetworkingFetchOptionNetFirst parameters:parameters progress:nil completion:completion];
 }
 
@@ -285,7 +290,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+- (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self get:URLString expires:expire options:ACNetworkingFetchOptionLocalAndNet parameters:parameters progress:nil completion:completion];
 }
 
@@ -298,7 +303,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+- (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self get:URLString expires:expire options:ACNetworkingFetchOptionLocalFirst parameters:parameters progress:nil completion:completion];
 }
 
@@ -313,6 +318,8 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
 - (nullable NSURLSessionDataTask *)getLocal:(NSString *)URLString parameters:(NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self get:URLString expires:Expire_Time_Never options:ACNetworkingFetchOptionLocalOnly parameters:parameters progress:nil completion:completion];
 }
+
+#pragma mark - PUBLIC POST
 
 /**
  post请求
@@ -347,7 +354,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+- (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self post:URLString expires:expire options:ACNetworkingFetchOptionNetFirst parameters:parameters progress:nil completion:completion];
 }
 
@@ -372,7 +379,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)postData:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+- (nullable NSURLSessionDataTask *)postData:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self post:URLString expires:expire options:ACNetworkingFetchOptionLocalFirst parameters:parameters progress:nil completion:completion];
 }
 
@@ -397,7 +404,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (nullable NSURLSessionDataTask *)postLocalAndNet:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+- (nullable NSURLSessionDataTask *)postLocalAndNet:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self post:URLString expires:expire options:ACNetworkingFetchOptionLocalAndNet parameters:parameters progress:nil completion:completion];
 }
 

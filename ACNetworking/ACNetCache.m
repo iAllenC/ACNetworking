@@ -18,6 +18,15 @@
 
 @implementation ACMemoryCache
 
+#pragma mark - Override
+
+- (id)objectForKey:(id)key {
+    /** 首先检查该key所缓存的对象是否有过期时间,如果有且已过期,则返回nil */
+    NSDate *expireDate = [self.expireDateDict objectForKey:key];
+    if (expireDate && [expireDate timeIntervalSinceNow] <= 0) return nil;
+    return [super objectForKey:key];
+}
+
 /**
  缓存对象,移除key对应的过期时间
  
@@ -28,6 +37,7 @@
     [self setObject:obj forKey:key refreshExpireDate:YES];
 }
 
+#pragma mark - Expanded Method
 /**
  缓存对象
  
@@ -68,13 +78,6 @@
     if (refresh && [self.expireDateDict.allKeys containsObject:key]) [self.expireDateDict removeObjectForKey:key];
 }
 
-- (id)objectForKey:(id)key {
-    /** 首先检查该key所缓存的对象是否有过期时间,如果有且已过期,则返回nil */
-    NSDate *expireDate = [self.expireDateDict objectForKey:key];
-    if (expireDate && [expireDate timeIntervalSinceNow] <= 0) return nil;
-    return [super objectForKey:key];
-}
-
 /**
  缓存对象并指定过期时间
 
@@ -82,7 +85,7 @@
  @param key key
  @param expire 过期时间
  */
-- (void)setObject:(id)obj forKey:(id)key expires:(NSTimeInterval)expire {
+- (void)setObject:(id)obj forKey:(id)key expires:(Expire_Time)expire {
     [self setObject:obj forKey:key expireDate:[NSDate dateWithTimeIntervalSinceNow:expire]];
 }
 
@@ -94,7 +97,7 @@
  @param g 消耗
  @param expire 过期时间
  */
-- (void)setObject:(id)obj forKey:(id)key cost:(NSUInteger)g expires:(NSTimeInterval)expire {
+- (void)setObject:(id)obj forKey:(id)key cost:(NSUInteger)g expires:(Expire_Time)expire {
     [self setObject:obj forKey:key cost:g expireDate:[NSDate dateWithTimeIntervalSinceNow:expire]];
 }
 
@@ -138,11 +141,13 @@
  @param expire 过期时间
  @return 缓存的对象
  */
-- (id)objectForKey:(id)key expires:(NSTimeInterval)expire {
+- (id)objectForKey:(id)key expires:(Expire_Time)expire {
     NSDate *addedDate = [self.addedDateDict objectForKey:key];
     if (addedDate && [[addedDate dateByAddingTimeInterval:expire] timeIntervalSinceNow] <= 0) return nil;
     return [self objectForKey:key];
 }
+
+#pragma mark - Lazy
 
 /** 用于保存对象的过期日期 */
 - (NSMutableDictionary *)expireDateDict {
@@ -177,6 +182,8 @@
 
 @implementation ACNetCache
 
+#pragma mark - Singleton
+
 + (instancetype)sharedCache {
     static ACNetCache *_sharedCache;
     static dispatch_once_t onceToken;
@@ -185,6 +192,8 @@
     });
     return _sharedCache;
 }
+
+#pragma mark - Constructor
 
 - (instancetype)initWithNamespace:(nonnull NSString *)ns directiory:(NSString *)directory keyGenerator:(ACNetCacheKeyGenerator)keyGenerator {
     if (self = [super init]) {
@@ -222,6 +231,7 @@
     return [paths[0] stringByAppendingPathComponent:fullNamespace];
 }
 
+#pragma mark - Check
 /**
  检查内存或磁盘缓存中是否有缓存的response
  
@@ -241,7 +251,7 @@
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire {
+- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire {
     return [self memoryCacheExistsForUrl:url param:param expires:expire] || [self diskCacheExistsForUrl:url param:param expires:expire];
 }
 
@@ -264,7 +274,7 @@
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)memoryCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire {
+- (BOOL)memoryCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire {
     return [self memoryCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:expire];
 }
 
@@ -285,7 +295,7 @@
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)memoryCacheExistsForKey:(NSString *)key expires:(NSTimeInterval)expire {
+- (BOOL)memoryCacheExistsForKey:(NSString *)key expires:(Expire_Time)expire {
     return [self.memoryCache objectForKey:key expires:expire] != nil;
 }
 
@@ -309,7 +319,7 @@
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire {
+- (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire {
     return [self diskCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:expire];
 
 }
@@ -320,7 +330,7 @@
  @param key Key
  @return 是否有缓存
  */
-- (BOOL)diskCacheExistsForKey:(NSString *)key expires:(NSTimeInterval)expire {
+- (BOOL)diskCacheExistsForKey:(NSString *)key expires:(Expire_Time)expire {
     if (!key) return NO;
     __block BOOL exists = NO;
     dispatch_sync(self.ioQueue, ^{
@@ -336,7 +346,7 @@
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)_diskCacheExistsForKey:(NSString *)key expires:(NSTimeInterval)expire {
+- (BOOL)_diskCacheExistsForKey:(NSString *)key expires:(Expire_Time)expire {
     if (!key) return NO;
     NSString *filePath = [self filePathForStoreKey:key];
     BOOL exists = [self.fileManager fileExistsAtPath:filePath];
@@ -344,6 +354,8 @@
     if (exists) exists = ![self fileExpiredAtPath:[self filePathForStoreKey:key] expires:expire];
     return exists;
 }
+
+#pragma mark - Store
 
 /**
  缓存response
@@ -385,34 +397,7 @@
     });
 }
 
-/**
- 删除本地内存缓存和磁盘缓存的response
-
- @param url URL
- @param param 请求参数
- */
-- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param {
-    [self deleteResponseForUrl:url param:param fromMemory:YES fromDisk:YES];
-}
-
-/**
- 删除本地response缓存
-
- @param url URL
- @param param 请求参数
- @param fromMemory 是否删除内存缓存
- @param fromDisk 是否删除磁盘缓存
- */
-- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk {
-    NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
-    if (fromMemory && [self memoryCacheExistsForKey:storeKey]) [self.memoryCache removeObjectForKey:storeKey];
-    if (fromDisk && [self diskCacheExistsForKey:storeKey expires:Expire_Time_Never]) {
-        dispatch_async(self.ioQueue, ^{
-            NSString *filePath = [self filePathForStoreKey:storeKey];
-            if ([self.fileManager fileExistsAtPath:filePath]) [self.fileManager removeItemAtPath:filePath error:nil];
-        });
-    }
-}
+#pragma mark - Fetch
 
 /**
  异步获取本地缓存的response,不过期
@@ -433,7 +418,7 @@
  @param expire 过期时间
  @param completion 回调
  */
-- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire completion:(ACNetCacheFetchCompletion)completion {
+- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire completion:(ACNetCacheFetchCompletion)completion {
     [self fetchResponseForUrl:url param:param expires:expire  async:YES completion:completion];
 }
 
@@ -446,7 +431,7 @@
  @param completion 回调
  @param async 是否异步
  */
-- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(NSTimeInterval)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion {
+- (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion {
     if (!url || !completion) return;
     NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
     __block id result = [self.memoryCache objectForKey:storeKey expires:expire];
@@ -482,7 +467,38 @@
     }
 }
 
+#pragma mark - Delete
 
+/**
+ 删除本地内存缓存和磁盘缓存的response
+ 
+ @param url URL
+ @param param 请求参数
+ */
+- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param {
+    [self deleteResponseForUrl:url param:param fromMemory:YES fromDisk:YES];
+}
+
+/**
+ 删除本地response缓存
+ 
+ @param url URL
+ @param param 请求参数
+ @param fromMemory 是否删除内存缓存
+ @param fromDisk 是否删除磁盘缓存
+ */
+- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk {
+    NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
+    if (fromMemory && [self memoryCacheExistsForKey:storeKey]) [self.memoryCache removeObjectForKey:storeKey];
+    if (fromDisk && [self diskCacheExistsForKey:storeKey expires:Expire_Time_Never]) {
+        dispatch_async(self.ioQueue, ^{
+            NSString *filePath = [self filePathForStoreKey:storeKey];
+            if ([self.fileManager fileExistsAtPath:filePath]) [self.fileManager removeItemAtPath:filePath error:nil];
+        });
+    }
+}
+
+#pragma mark - Helper
 /**
  根据key获取文件存储路径
 
@@ -514,7 +530,7 @@
  @param expire 过期时间
  @return 是否过期
  */
-- (BOOL)fileExpiredAtPath:(NSString *)filePath expires:(NSTimeInterval)expire {
+- (BOOL)fileExpiredAtPath:(NSString *)filePath expires:(Expire_Time)expire {
     if (expire <= 0 || !filePath) return YES;
     NSDate *modicationDate = [self fileModificationDateAtPath:filePath];
     if (!modicationDate) return YES;
@@ -551,6 +567,8 @@
     id result = [info objectForKey:key];
     return result;
 }
+
+#pragma mark - Lazy
 
 - (ACNetCacheKeyGenerator)keyGenerator {
     if (!_keyGenerator) {
