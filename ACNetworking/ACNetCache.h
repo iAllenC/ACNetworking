@@ -18,6 +18,14 @@ typedef NS_ENUM(NSUInteger, ACNetCacheType) {
 
 typedef void(^ACNetCacheFetchCompletion)(ACNetCacheType type, id response);
 
+typedef NSTimeInterval Expire_Time;
+
+/** 永不过期 */
+static Expire_Time Expire_Time_Never = DBL_MAX;
+
+/** 不取缓存 */
+static Expire_Time Expire_Time_Always = 0;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ACNetCache : NSObject

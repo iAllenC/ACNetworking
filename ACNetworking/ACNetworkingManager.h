@@ -14,18 +14,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** 网络请求策略 */
 typedef NS_ENUM(NSUInteger, ACNetworkingFetchOption) {
-    /** 默认option */
-    ACNetworkingFetchOptionDefault = 1 << 0,
+    /** 默认option 先取网络,请求失败再取本地,优先级最低.*/
+    ACNetworkingFetchOptionNetFirst = 1 << 0,
+    /** 以下option优先级逐渐降低 */
+    /** 传入这个option只请求网络数据,忽略本地 */
+    ACNetworkingFetchOptionNetOnly = 1 << 1,
     /** 传入这个option只获取本地缓存 */
-    ACNetworkingFetchOptionLocalOnly = 1 << 1,
-    /** 传入这个option只请求网络数据,忽略本地(传了ACNetworkingFetchOptionLocalOnly时此option不起作用) */
-    ACNetworkingFetchOptionNetOnly = 1 << 2,
+    ACNetworkingFetchOptionLocalOnly = 1 << 2,
+    /** 优先取本地缓存,无缓存取网络 */
+    ACNetworkingFetchOptionLocalFirst = 1 << 3,
     /** 传入这个option先取本地(如果有的话),然后取网络 */
-    ACNetworkingFetchOptionLocalAndNet = 1 << 3,
+    ACNetworkingFetchOptionLocalAndNet = 1 << 4,
+    /** 以下option无冲突,顾优先级区别 */
     /** 默认请求成功后会更新本地缓存的返回结果, 传入这个option将不更新缓存*/
-    ACNetworkingFetchOptionNotUpdateCache = 1 << 4,
+    ACNetworkingFetchOptionNotUpdateCache = 1 << 5,
     /** 传入这个option,将在回调结束后删除本地缓存 */
-    ACNetworkingFetchOptionDeleteCache = 1 << 5
+    ACNetworkingFetchOptionDeleteCache = 1 << 6
 };
 
 typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id _Nullable responseObject, NSError * _Nullable error);
@@ -109,7 +113,28 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
+- (nullable NSURLSessionDataTask *)getNet:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+
+/**
+ get数据(优先读网络,失败读缓存,缓存不过期)
+ 
+ @param URLString url
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
 - (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+
+/**
+ get数据(优先读网络,失败读缓存)
+ 
+ @param URLString url
+ @param expire 过期时间
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
 /**
  get数据(优先读缓存,不过期)
@@ -171,8 +196,28 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @param completion 回调
  @return 生成的task
  */
+- (nullable NSURLSessionDataTask *)postNet:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+
+/**
+ post数据(优先读网络,失败读缓存,缓存不过期)
+ 
+ @param URLString url
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
 - (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 
+/**
+ post数据(优先读网络,失败读缓存)
+ 
+ @param URLString url
+ @param expire 过期时间
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(NSTimeInterval)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
 /**
  post数据(优先读缓存,不过期)
 

@@ -230,7 +230,7 @@
  @return 是否有缓存
  */
 - (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
-    return [self netCacheExistsForUrl:url param:param expires:MAXFLOAT];
+    return [self netCacheExistsForUrl:url param:param expires:Expire_Time_Never];
 }
 
 /**
@@ -298,7 +298,7 @@
  @return 是否有缓存
  */
 - (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
-    return [self diskCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:MAXFLOAT];
+    return [self diskCacheExistsForKey:[self fetchCacheKeyWithUrl:url  param:param] expires:Expire_Time_Never];
 }
 
 /**
@@ -406,7 +406,7 @@
 - (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk {
     NSString *storeKey = [self fetchCacheKeyWithUrl:url  param:param];
     if (fromMemory && [self memoryCacheExistsForKey:storeKey]) [self.memoryCache removeObjectForKey:storeKey];
-    if (fromDisk && [self diskCacheExistsForKey:storeKey expires:MAXFLOAT]) {
+    if (fromDisk && [self diskCacheExistsForKey:storeKey expires:Expire_Time_Never]) {
         dispatch_async(self.ioQueue, ^{
             NSString *filePath = [self filePathForStoreKey:storeKey];
             if ([self.fileManager fileExistsAtPath:filePath]) [self.fileManager removeItemAtPath:filePath error:nil];
@@ -422,7 +422,7 @@
  @param completion 回调
  */
 - (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param completion:(ACNetCacheFetchCompletion)completion {
-    [self fetchResponseForUrl:url param:param expires:MAXFLOAT completion:completion];
+    [self fetchResponseForUrl:url param:param expires:Expire_Time_Never completion:completion];
 }
 
 /**
