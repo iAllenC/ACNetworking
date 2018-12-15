@@ -25,7 +25,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingFetchOption) {
     ACNetworkingFetchOptionLocalFirst = 1 << 3,
     /** 传入这个option先取本地(如果有的话),然后取网络 */
     ACNetworkingFetchOptionLocalAndNet = 1 << 4,
-    /** 以下option无冲突,顾优先级区别 */
+    /** 以下option无冲突,无优先级区别 */
     /** 默认请求成功后会更新本地缓存的返回结果, 传入这个option将不更新缓存*/
     ACNetworkingFetchOptionNotUpdateCache = 1 << 5,
     /** 传入这个option,将在回调结束后删除本地缓存 */
