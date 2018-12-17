@@ -32,6 +32,14 @@ typedef NS_ENUM(NSUInteger, ACNetworkingFetchOption) {
     ACNetworkingFetchOptionDeleteCache = 1 << 6
 };
 
+/**
+ 请求结果回调
+
+ @param task 请求生成的task,若只取了本地缓存,则为nil
+ @param type 缓存类型
+ @param responseObject 请求返回结果
+ @param error 请求error
+ */
 typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id _Nullable responseObject, NSError * _Nullable error);
 
 @interface ACNetworkingManager : NSObject

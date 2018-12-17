@@ -171,7 +171,7 @@
 
 @property (nonatomic, copy) NSString *diskDirectory;
 
-@property (strong, nonatomic, nullable) dispatch_queue_t ioQueue;
+@property (strong, nonatomic, nonnull) dispatch_queue_t ioQueue;
 
 @property (strong, nonatomic, nonnull) NSFileManager *fileManager;
 
@@ -195,7 +195,7 @@
 
 #pragma mark - Constructor
 
-- (instancetype)initWithNamespace:(nonnull NSString *)ns directiory:(NSString *)directory keyGenerator:(ACNetCacheKeyGenerator)keyGenerator {
+- (instancetype)initWithNamespace:(NSString *)ns directiory:(NSString *)directory keyGenerator:(ACNetCacheKeyGenerator)keyGenerator {
     if (self = [super init]) {
         _ioQueue = dispatch_queue_create("com.acnetworking.netcache", DISPATCH_QUEUE_SERIAL);
         NSString *fullNamespace = [@"com.acnetworking.netcache" stringByAppendingString:ns];
@@ -218,20 +218,21 @@
     return [self cacheWithNamespace:ns directiory:nil];
 }
 
-+ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(NSString *)directory {
++ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(nullable NSString *)directory {
     return [self cacheWithNamespace:ns directiory:directory keyGenerator:nil];
 }
 
-+ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(NSString *)directory keyGenerator:(ACNetCacheKeyGenerator)keyGenerator {
++ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(nullable NSString *)directory keyGenerator:(nullable ACNetCacheKeyGenerator)keyGenerator {
     return [[self alloc] initWithNamespace:ns directiory:directory keyGenerator:keyGenerator];
 }
 
-- (nullable NSString *)makeDiskCachePath:(nonnull NSString*)fullNamespace {
+- (NSString *)makeDiskCachePath:(NSString*)fullNamespace {
     NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     return [paths[0] stringByAppendingPathComponent:fullNamespace];
 }
 
 #pragma mark - Check
+
 /**
  检查内存或磁盘缓存中是否有缓存的response
  
@@ -239,8 +240,8 @@
  @param param 请求参数
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
-    return [self netCacheExistsForUrl:url param:param expires:Expire_Time_Never];
+- (BOOL)cacheExistsForUrl:(NSString *)url param:(NSDictionary *)param {
+    return [self cacheExistsForUrl:url param:param expires:Expire_Time_Never];
 }
 
 /**
@@ -251,7 +252,7 @@
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire {
+- (BOOL)cacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire {
     return [self memoryCacheExistsForUrl:url param:param expires:expire] || [self diskCacheExistsForUrl:url param:param expires:expire];
 }
 
@@ -571,10 +572,7 @@
 #pragma mark - Lazy
 
 - (ACNetCacheKeyGenerator)keyGenerator {
-    if (!_keyGenerator) {
-        _keyGenerator = DefaultKeyGenerator;
-    }
-    return _keyGenerator;
+    return _keyGenerator ?: DefaultKeyGenerator;
 }
 
 @end

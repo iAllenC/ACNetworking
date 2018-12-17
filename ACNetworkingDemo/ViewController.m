@@ -27,8 +27,10 @@
 //    self.task = [self.networkingManager postRequest:url parameters:param completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
 //        NSLog(@"%@",responseObject);
 //    }];
-    self.task = [self.networkingManager post:url expires:Expire_Time_Never options:ACNetworkingFetchOptionLocalFirst | ACNetworkingFetchOptionDeleteCache parameters:param progress:nil completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
-        NSLog(@"%@",responseObject);
+    self.task = [self.networkingManager post:url expires:Expire_Time_Always options:ACNetworkingFetchOptionDeleteCache | ACNetworkingFetchOptionNetOnly |ACNetworkingFetchOptionNotUpdateCache parameters:param progress:^(NSProgress * _Nonnull progress) {
+        NSLog(@"Progress:%@", progress);
+    } completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
+        NSLog(@"Response:%@",responseObject);
     }];
 //    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 //        [self.networkinManager postData:url expires:5 parameters:param completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {

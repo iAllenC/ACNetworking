@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** 缓存Key生成器,默认为DefaultKeyGenerator */
 @property (nonatomic, copy) ACNetCacheKeyGenerator keyGenerator;
 
+#pragma mark - Constructor
+
 /**
  实例化
  
@@ -51,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param directory 缓存目录
  @return 实例
  */
-+ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(NSString * _Nullable)directory;
++ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(nullable NSString *)directory;
 
 /**
  实例化
@@ -60,7 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
  @param directory 缓存目录
  @return 实例
  */
-+ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(NSString * _Nullable)directory keyGenerator:(ACNetCacheKeyGenerator _Nullable)keyGenerator;
++ (instancetype)cacheWithNamespace:(NSString *)ns directiory:(nullable NSString *)directory keyGenerator:(nullable ACNetCacheKeyGenerator)keyGenerator;
+
+#pragma mark - Check
 
 /**
  检查内存或磁盘缓存中是否有缓存的response
@@ -69,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param param 请求参数
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param;
+- (BOOL)cacheExistsForUrl:(NSString *)url param:(NSDictionary *)param;
 
 /**
  检查内存或磁盘缓存中是否有缓存的response
@@ -79,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param expire 过期时间
  @return 是否有缓存
  */
-- (BOOL)netCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire;
+- (BOOL)cacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire;
 
 /**
  检查内存缓存中是否存在对应的response缓存
@@ -119,6 +123,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (BOOL)diskCacheExistsForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire;
 
+#pragma mark - Store
+
 /**
  缓存response
  
@@ -139,23 +145,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)storeResponse:(id)response forUrl:(NSString *)url param:(NSDictionary *)param toMemory:(BOOL)toMemory toDisk:(BOOL)toDisk;
 
-/**
- 删除本地内存缓存和磁盘缓存的response
- 
- @param url URL
- @param param 请求参数
- */
-- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param;
-
-/**
- 删除本地response缓存
- 
- @param url URL
- @param param 请求参数
- @param fromMemory 是否删除内存缓存
- @param fromDisk 是否删除磁盘缓存
- */
-- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk;
+#pragma mark - Fetch
 
 /**
  获取本地缓存的response,不过期
@@ -186,6 +176,26 @@ NS_ASSUME_NONNULL_BEGIN
  @param async 是否异步
  */
 - (void)fetchResponseForUrl:(NSString *)url param:(NSDictionary *)param expires:(Expire_Time)expire async:(BOOL)async completion:(ACNetCacheFetchCompletion)completion;
+
+#pragma mark - Delete
+
+/**
+ 删除本地内存缓存和磁盘缓存的response
+ 
+ @param url URL
+ @param param 请求参数
+ */
+- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param;
+
+/**
+ 删除本地response缓存
+ 
+ @param url URL
+ @param param 请求参数
+ @param fromMemory 是否删除内存缓存
+ @param fromDisk 是否删除磁盘缓存
+ */
+- (void)deleteResponseForUrl:(NSString *)url param:(NSDictionary *)param fromMemory:(BOOL)fromMemory fromDisk:(BOOL)fromDisk;
 
 @end
 

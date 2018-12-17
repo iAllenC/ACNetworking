@@ -138,7 +138,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
             if (completion) completion(nil, type, response, nil);
             if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString param:parameters];
         }];
-        if (options & ACNetworkingFetchOptionLocalAndNet) {
+        if (!shouldFetchLocalAsynchronously) {
             if (method == ACNetworkingMethodGet) {
                 return [self getRequest:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
             } else {
@@ -212,7 +212,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
     //option只读本地,返回YES
     if (options & ACNetworkingFetchOptionLocalOnly) return YES;
     //option优先读缓存或先读缓存,返回本地是否有未过期缓存
-    if (options & ACNetworkingFetchOptionLocalFirst || options & ACNetworkingFetchOptionLocalAndNet) return [self.responseCache netCacheExistsForUrl:url param:param expires:expire];
+    if (options & ACNetworkingFetchOptionLocalFirst || options & ACNetworkingFetchOptionLocalAndNet) return [self.responseCache cacheExistsForUrl:url param:param expires:expire];
     //以上option均未传,不读缓存
     return NO;
 }
@@ -270,6 +270,19 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
 }
 
 /**
+ get数据(优先读缓存)
+ 
+ @param URLString url
+ @param expire 过期时间
+ @param parameters 请求参数
+ @param completion 回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
+    return [self get:URLString expires:expire options:ACNetworkingFetchOptionLocalFirst parameters:parameters progress:nil completion:completion];
+}
+
+/**
  get数据(先读缓存,再取网络, 不过期)
  
  @param URLString url
@@ -292,19 +305,6 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  */
 - (nullable NSURLSessionDataTask *)getLocalAndNet:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self get:URLString expires:expire options:ACNetworkingFetchOptionLocalAndNet parameters:parameters progress:nil completion:completion];
-}
-
-/**
- get数据(优先读缓存)
- 
- @param URLString url
- @param expire 过期时间
- @param parameters 请求参数
- @param completion 回调
- @return 生成的task
- */
-- (nullable NSURLSessionDataTask *)getData:(NSString *)URLString expires:(Expire_Time)expire parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
-    return [self get:URLString expires:expire options:ACNetworkingFetchOptionLocalFirst parameters:parameters progress:nil completion:completion];
 }
 
 /**
