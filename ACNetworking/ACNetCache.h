@@ -10,9 +10,13 @@
 #import "ACNetCacheKeyGenerator.h"
 
 typedef NS_ENUM(NSUInteger, ACNetCacheType) {
+    /** 无缓存 */
     ACNetCacheTypeNone = 0,
+    /** 内存缓存 */
     ACNetCacheTypeMemroy,
+    /** 磁盘缓存 */
     ACNetCacheTypeDisk,
+    /** 网络数据 */
     ACNetCacheTypeNet
 };
 

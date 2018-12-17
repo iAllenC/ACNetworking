@@ -219,6 +219,13 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
 }
 
 #pragma mark - PUBLIC GET
+/** API说明
+ 1.get/post+Net:只走网络请求,不读取本地缓存
+ 2.get/post+Request:优先走网络请求,网络失败读取本地缓存
+ 3.get/post+Data:优先读缓存,无缓存走网络请求
+ 4.get/post+LocalAndNet:先读取本地,然后再走网络请求
+ 5.get/post+Local:只取本地缓存,不走网络请求
+ */
 
 /**
  get请求
