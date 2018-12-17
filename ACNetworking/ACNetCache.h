@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ACNetCache : NSObject
 
-/** 单例类 */
+/** 单例 */
 @property (nonatomic, strong, class, readonly) ACNetCache *sharedCache;
 
 /** 缓存Key生成器,默认为DefaultKeyGenerator */

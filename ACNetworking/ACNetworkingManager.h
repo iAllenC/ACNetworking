@@ -117,6 +117,14 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
                                progress:(nullable void (^)(NSProgress *uploadProgress))uploadProgress
                              completion:(ACNetworkingCompletion)completion;
 
+/** API说明
+ 1.get/post+Net:只走网络请求,不读取本地缓存
+ 2.get/post+Request:优先走网络请求,网络失败读取本地缓存
+ 3.get/post+Data:优先读缓存,无缓存走网络请求
+ 4.get/post+LocalAndNet:先读取本地,然后再走网络请求
+ 5.get/post+Local:只取本地缓存,不走网络请求
+ */
+
 #pragma mark - PUBLIC GET
 
 /**
@@ -285,6 +293,20 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
  @return 生成的task
  */
 - (nullable NSURLSessionDataTask *)postLocal:(NSString *)URLString parameters:(nullable NSDictionary *)parameters completion:(ACNetworkingCompletion)completion;
+
+
+/**
+ post表单上传(无缓存)
+
+ @param URLString url
+ @param parameters 请求参数
+ @param block 用于构建formData的block
+ @param uploadProgress 上传进度
+ @param completion 完成回调
+ @return 生成的task
+ */
+- (nullable NSURLSessionDataTask *)postNet:(NSString *)URLString parameters:(nullable id)parameters constructingBlock:(nullable void (^)(id <AFMultipartFormData> formData))block progress:(nullable void (^)(NSProgress *uploadProgress))uploadProgress completion:(ACNetworkingCompletion)completion;
+
 
 @end
 

@@ -135,7 +135,9 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
          */
         BOOL shouldFetchLocalAsynchronously = options & ACNetworkingFetchOptionLocalOnly || options & ACNetworkingFetchOptionLocalFirst;
         [self.responseCache fetchResponseForUrl:URLString param:parameters expires:expire async:shouldFetchLocalAsynchronously completion:^(ACNetCacheType type, id response) {
-            if (completion) completion(nil, type, response, nil);
+            NSError *error = nil;
+            if (type == ACNetCacheTypeNone) error = [NSError errorWithDomain:@"com.acnetworking.expire" code:404 userInfo:@{NSLocalizedDescriptionKey: @"本地无缓存或缓存已过期!"}];
+            if (completion) completion(nil, type, response, error);
             if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString param:parameters];
         }];
         /** 同步读取本地缓存,意味着未传LocalOnly或者LocalFirst,传了LocalAndNet,需要新建一个网络请求返回. */
@@ -426,6 +428,24 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  */
 - (nullable NSURLSessionDataTask *)postLocal:(NSString *)URLString parameters:(NSDictionary *)parameters completion:(ACNetworkingCompletion)completion {
     return [self post:URLString expires:Expire_Time_Never options:ACNetworkingFetchOptionLocalOnly parameters:parameters progress:nil completion:completion];
+}
+
+/**
+ post表单上传(无缓存)
+ 
+ @param URLString url
+ @param parameters 请求参数
+ @param block 用于构建formData的block
+ @param uploadProgress 上传进度
+ @param completion 完成回调
+ @return 生成的task
+ */
+- (NSURLSessionDataTask *)postNet:(NSString *)URLString parameters:(id)parameters constructingBlock:(void (^)(id<AFMultipartFormData> _Nonnull))block progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
+    return [self.sessionManager POST:URLString parameters:parameters constructingBodyWithBlock:block progress:uploadProgress success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        if (completion) completion(task, ACNetCacheTypeNet, responseObject, nil);
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        if (completion) completion(task, ACNetCacheTypeNone, nil, error);
+    }];
 }
 
 @end
