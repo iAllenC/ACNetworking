@@ -68,7 +68,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)getRequest:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)getTask:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))downloadProgress completion:(ACNetworkingCompletion)completion {
     __weak typeof(self) weakSelf = self;
     return [self.sessionManager GET:URLString parameters:parameters progress:downloadProgress success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         [weakSelf handleHttpSucceessForUrl:URLString parames:parameters task:task responseObject:responseObject expires:expire options:options completion:completion];
@@ -104,7 +104,7 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
  @param completion 回调
  @return 生成的task
  */
-- (NSURLSessionDataTask *)postRequest:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
+- (NSURLSessionDataTask *)postTask:(NSString *)URLString expires:(Expire_Time)expire options:(ACNetworkingFetchOption)options parameters:(NSDictionary *)parameters progress:(void (^)(NSProgress * _Nonnull))uploadProgress completion:(ACNetworkingCompletion)completion {
     __weak typeof(self) weakSelf = self;
     return [self.sessionManager POST:URLString parameters:parameters progress:uploadProgress success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         [weakSelf handleHttpSucceessForUrl:URLString parames:parameters task:task responseObject:responseObject expires:expire options:options completion:completion];
@@ -138,19 +138,20 @@ typedef NS_ENUM(NSUInteger, ACNetworkingMethod) {
             if (completion) completion(nil, type, response, nil);
             if(options & ACNetworkingFetchOptionDeleteCache) [weakSelf.responseCache deleteResponseForUrl:URLString param:parameters];
         }];
+        /** 同步读取本地缓存,意味着未传LocalOnly或者LocalFirst,传了LocalAndNet,需要新建一个网络请求返回. */
         if (!shouldFetchLocalAsynchronously) {
             if (method == ACNetworkingMethodGet) {
-                return [self getRequest:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
+                return [self getTask:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
             } else {
-                return [self postRequest:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
+                return [self postTask:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
             }
         } else {
             return nil;
         }
     } else if (method == ACNetworkingMethodGet) {
-        return [self getRequest:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
+        return [self getTask:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
     } else {
-        return [self postRequest:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
+        return [self postTask:URLString expires:expire options:options parameters:parameters progress:progress completion:completion];
     }
 }
 
