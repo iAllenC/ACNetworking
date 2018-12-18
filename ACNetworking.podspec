@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
     s.source       = { :git => "https://github.com/iAllenC/ACNetworking.git", :tag => "#{s.version}" }
     s.source_files  = "ACNetworking/*.{h,m}"
     s.requires_arc = true
-    s.dependency 'AFNetworking', '~> 3.0.0'
+    s.dependency "AFNetworking", "~> 3.0"
 
     # s.framework  = "SomeFramework"
     # s.frameworks = "SomeFramework", "AnotherFramework"
