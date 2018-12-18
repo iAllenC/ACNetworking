@@ -26,22 +26,6 @@
         return [DefaultKeyGenerator(url, param) stringByAppendingString:@"Allen"];
     }]];
     self.networkingManager.sessionManager.requestSerializer.timeoutInterval = 10;
-    NSLog(@"Task:%@", self.task);
-}
-
-- (UIImage *)ac_imageWithColor:(UIColor *)color size:(CGSize)size
-{
-    CGRect rect = (CGRect){CGPointZero,size};
-    UIGraphicsBeginImageContext(rect.size);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    
-    CGContextSetFillColorWithColor(context, [color CGColor]);
-    CGContextFillRect(context, rect);
-    
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    return image;
 }
 
 - (IBAction)optionBtnAction:(UIButton *)sender {
@@ -49,6 +33,7 @@
 }
 
 - (IBAction)sendAction:(id)sender {
+    /** 天气接口场景并不适合做缓存,本demo只是用作实例. */
     NSString *url = @"https://free-api.heweather.com/v5/weather";
     NSDictionary *param = @{@"key": @"d9c261ebfe4644aeaea3028bcf10e149", @"city": @"32,118.5"};
     Expire_Time expire;
@@ -60,7 +45,7 @@
         expire = self.expireTimeField.text.doubleValue;
     }
     __weak typeof(self) weakSelf = self;
-    /** 示例只演示了两个核心入口方法的调用,实际上针对不同场景,本框架都做了一定的便利封装,用户可根据需要调用 */
+    /** 示例只演示了两个核心入口方法的调用,实际上针对不同场景,本框架都做了一定的便利封装,使用者可根据需要调用 */
     if (self.methodSegment.selectedSegmentIndex == 0) {
         self.task = [self.networkingManager get:url expires:expire options:[self options] parameters:param progress:nil completion:^(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id  _Nullable responseObject, NSError * _Nullable error) {
             [weakSelf processNetCache:type Response:responseObject error:error];
@@ -110,11 +95,26 @@
 - (void)processNetCache:(ACNetCacheType)cacheType Response:(id)response error:(NSError *)error {
     NSLog(@"Response:%@",response);
     if (cacheType == ACNetCacheTypeNone) {
-        self.textView.text = error.localizedDescription;
+        self.textView.text = [NSString stringWithFormat:@"%@:\n%@", [self typeNameForCacheType:cacheType], error.localizedDescription];
     } else {
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-        self.textView.text = jsonString;
+        self.textView.text = [NSString stringWithFormat:@"%@:\n%@", [self typeNameForCacheType:cacheType], jsonString];
+    }
+}
+
+- (NSString *)typeNameForCacheType:(ACNetCacheType)type {
+    switch (type) {
+        case ACNetCacheTypeNet:
+            return @"网络返回结果";
+        case ACNetCacheTypeMemroy:
+            return @"内存缓存结果";
+        case ACNetCacheTypeDisk:
+            return @"磁盘缓存结果";
+        case ACNetCacheTypeNone:
+            return @"无结果";
+        default:
+            return nil;
     }
 }
 

@@ -44,8 +44,10 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
 
 @interface ACNetworkingManager : NSObject
 
+/** AFHTTPSessionManager,用户可以根据自己的需求自定义响应的manager,默认为[AFHTTPSessionManager manager] */
 @property (nonatomic, strong, readonly) AFHTTPSessionManager *sessionManager;
 
+/** 结果缓存类,默认为ACNetCache.sharedCache */
 @property (nonatomic, strong, readonly) ACNetCache *responseCache;
 
 #pragma mark - Constructor
