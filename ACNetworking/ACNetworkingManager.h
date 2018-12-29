@@ -39,8 +39,9 @@ typedef NS_ENUM(NSUInteger, ACNetworkingFetchOption) {
  @param type 缓存类型
  @param responseObject 请求返回结果
  @param error 请求error
+ @param cacheDate 缓存时间(可nil)
  */
-typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id _Nullable responseObject, NSError * _Nullable error);
+typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACNetCacheType type, id _Nullable responseObject, NSError * _Nullable error, NSDate * _Nullable cacheDate);
 
 @interface ACNetworkingManager : NSObject
 
@@ -102,6 +103,25 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
                             completion:(ACNetworkingCompletion)completion;
 
 /**
+ get方法
+ 
+ @param URLString URL
+ @param expire 过期时间
+ @param options options
+ @param parameters 请求参数
+ @param downloadProgress progress
+ @param completion 结果回调
+ @return dataTask
+ */
+- (nullable NSURLSessionDataTask *)get:(NSString *)URLString
+                               expires:(Expire_Time)expire
+                               options:(ACNetworkingFetchOption)options
+                            parameters:(nullable NSDictionary *)parameters
+                          keyGenerator:(nullable ACNetCacheKeyGenerator)generator
+                              progress:(nullable void (^)(NSProgress *downloadProgress))downloadProgress
+                            completion:(ACNetworkingCompletion)completion;
+
+/**
  post方法
  
  @param URLString URL
@@ -119,7 +139,27 @@ typedef void(^ACNetworkingCompletion)(NSURLSessionDataTask * _Nullable task, ACN
                                progress:(nullable void (^)(NSProgress *uploadProgress))uploadProgress
                              completion:(ACNetworkingCompletion)completion;
 
+/**
+ post方法
+ 
+ @param URLString URL
+ @param expire 过期时间
+ @param options options
+ @param parameters 请求参数
+ @param uploadProgress progress
+ @param completion 结果回调
+ @return dataTask
+ */
+- (nullable NSURLSessionDataTask *)post:(NSString *)URLString
+                                expires:(Expire_Time)expire
+                                options:(ACNetworkingFetchOption)options
+                             parameters:(nullable NSDictionary *)parameters
+                           keyGenerator:(nullable ACNetCacheKeyGenerator)generator
+                               progress:(nullable void (^)(NSProgress *uploadProgress))uploadProgress
+                             completion:(ACNetworkingCompletion)completion;
+
 /** API说明
+ 以下封装的便利方法均采用self.responseCache.keyGenerator生成存储key,若需要单独生成key请使用上面的方法.
  1.get/post+Net:只走网络请求,不读取本地缓存
  2.get/post+Request:优先走网络请求,网络失败读取本地缓存
  3.get/post+Data:优先读缓存,无缓存走网络请求
